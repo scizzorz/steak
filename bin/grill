@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+import getopt
+import imp
+import os
+import steak
+import sys
+import types
+
+if '.' not in sys.path:
+	sys.path.append('.')
+if 'steak' not in sys.path:
+	sys.path.append('steak')
+
+def _import(filename, modulename='__steak__'):
+	if os.path.exists(filename) and modulename not in sys.modules:
+		sys.modules[modulename] = imp.load_source(modulename, filename)
+		return sys.modules[modulename]
+
+def _inspect(module):
+	attrs = (x for x in dir(module) if not x.startswith('__'))
+	for attr in attrs:
+		val = getattr(module, attr)
+		if isinstance(val, types.FunctionType):
+			print("Steaking '{}'".format(attr))
+			setattr(module, attr, steak.steakify(getattr(module, attr)))
+
+if __name__ == '__main__':
+	args = sys.argv[1:]
+
+	#files = [('steak.py', '__steak__'), ('grill.py', '__steak__')]
+	files = [('grill.py', '__steak__')]
+
+	if os.path.exists('steak'):
+		for filename in os.listdir('steak'):
+			basename, ext = os.path.splitext(filename)
+			if ext == '.py':
+				files.append((os.path.join('steak', filename), basename))
+
+	for filename, modulename in files:
+		mod = _import(filename, modulename)
+		_inspect(mod)
+
+	steak.main(args)
