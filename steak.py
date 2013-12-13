@@ -17,7 +17,7 @@ class Grill(object):
 
 	def steak(self, func):
 		if not isinstance(func, Steak):
-			func = Steak(func)
+			func = Steak(self, func)
 			if not func.name.startswith('_'):
 				self.steaks[func.qualname] = func
 
@@ -25,6 +25,11 @@ class Grill(object):
 
 	def burn(self, message, *args):
 		raise BurnException(message.format(*args))
+
+	def highlight(self, string, color):
+		if color > 7:
+			color += 52
+		return '\033[{color}m{string}\033[0m'.format(string=string, color=color+30)
 
 	def main(self, args):
 		if 'setup' in self:
@@ -35,15 +40,16 @@ class Grill(object):
 				self['default'].invoke()
 			else:
 				while args:
-					if args[0] in self:
-						args = self[args[0]].invoke(args[1:])
+					name = args[0]
+					if name in self:
+						args = self[name].invoke(args[1:])
 					else:
 						self.burn('No task found')
 		except BurnException as ex:
-			print('Burned :( {}'.format(ex))
+			print('Oops. Your {!r} steak was burned :( {}'.format(self[name], ex))
 		except Exception as ex:
 			traceback.print_exc()
-			print('Charred :( {}'.format(ex))
+			print('Oops. Your {!r} steak exploded :( {}'.format(self[name], ex))
 		finally:
 			if 'teardown' in self:
 				self['teardown'].invoke()
@@ -59,7 +65,8 @@ class Grill(object):
 		return len(matches) > 0
 
 class Steak(object):
-	def __init__(self, func):
+	def __init__(self, grill, func):
+		self.grill = grill
 		self.func = func
 		self.name = func.__name__
 		self.doc = func.__doc__
@@ -103,7 +110,7 @@ class Steak(object):
 		posargs = []
 		for arg in self.args:
 			if not len(args):
-				self.burn('Wrong number of arguments')
+				self.grill.burn('Wrong number of arguments')
 			posargs.append(args[0])
 			args = args[1:]
 
@@ -115,16 +122,9 @@ class Steak(object):
 		return args
 
 	def call(self, *args, **kwargs):
-		try:
-			self.func(*args, **kwargs)
-		except BurnException as ex:
-			print('Burned :( {}'.format(ex))
-		except Exception as ex:
-			traceback.print_exc()
-			print('Charred :( {}'.format(ex))
-		else:
-			self.valid = True
-			return self.valid
+		self.func(*args, **kwargs)
+		self.valid = True
+		return self.valid
 
 	def parse_opts(self, *opts):
 		ret = {}
@@ -138,5 +138,8 @@ class Steak(object):
 			ret[key.replace('-', '_')] = val
 		return ret
 
-	def burn(self, message, *args):
-		raise BurnException(message.format(*args))
+	def __str__(self):
+		return self.qualname
+
+	def __repr__(self):
+		return self.grill.highlight(str(self), 1 if self.valid else 2)
