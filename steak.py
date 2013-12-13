@@ -39,6 +39,11 @@ class Grill(object):
 						args = self[args[0]].invoke(args[1:])
 					else:
 						self.burn('No task found')
+		except BurnException as ex:
+			print('Burned :( {}'.format(ex))
+		except Exception as ex:
+			traceback.print_exc()
+			print('Charred :( {}'.format(ex))
 		finally:
 			if 'teardown' in self:
 				self['teardown'].invoke()
@@ -113,10 +118,10 @@ class Steak(object):
 		try:
 			self.func(*args, **kwargs)
 		except BurnException as ex:
-			print('Burned :(')
+			print('Burned :( {}'.format(ex))
 		except Exception as ex:
-			print('Charred :(')
 			traceback.print_exc()
+			print('Charred :( {}'.format(ex))
 		else:
 			self.valid = True
 			return self.valid
