@@ -16,13 +16,12 @@ def _import(filename, modulename='__steak__'):
 		sys.modules[modulename] = imp.load_source(modulename, filename)
 		return sys.modules[modulename]
 
-def _inspect(module):
+def _inspect(grill, module):
 	attrs = (x for x in dir(module) if not x.startswith('__'))
 	for attr in attrs:
 		val = getattr(module, attr)
 		if isinstance(val, types.FunctionType):
-			print("Steaking '{}'".format(attr))
-			setattr(module, attr, steak.steakify(getattr(module, attr)))
+			setattr(module, attr, grill.steak(getattr(module, attr)))
 
 if __name__ == '__main__':
 	args = sys.argv[1:]
@@ -36,8 +35,10 @@ if __name__ == '__main__':
 			if ext == '.py':
 				files.append((os.path.join('steak', filename), basename))
 
+	grill = steak.Grill()
+
 	for filename, modulename in files:
 		mod = _import(filename, modulename)
-		_inspect(mod)
+		_inspect(grill, mod)
 
-	steak.main(args)
+	grill.main(args)
