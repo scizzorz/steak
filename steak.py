@@ -1,5 +1,7 @@
 import inspect
 import traceback
+from getopt import getopt
+from inspect import Parameter
 from functools import wraps
 
 __version_info__ = (0, 1, 0)
@@ -18,6 +20,7 @@ class Grill(object):
 			func = Steak(func)
 			if not func.name.startswith('_'):
 				self.steaks[func.qualname] = func
+
 		return func
 
 	def burn(self, message, *args):
@@ -25,15 +28,17 @@ class Grill(object):
 
 	def main(self, args):
 		if 'setup' in self:
-			self['setup'].invoke()
+			args = self['setup'].invoke(args)
 
 		try:
 			if not args and 'default' in self:
 				self['default'].invoke()
 			else:
-				for arg in args:
-					if arg in self:
-						self[arg].invoke()
+				while args:
+					if args[0] in self:
+						args = self[args[0]].invoke(args[1:])
+					else:
+						self.burn('No task found')
 		finally:
 			if 'teardown' in self:
 				self['teardown'].invoke()
@@ -56,15 +61,55 @@ class Steak(object):
 		self.module = inspect.getmodule(func).__name__
 		self.qual = ('') if (self.module == '__steak__') else (self.module + '.')
 		self.qualname = self.qual + self.name
+
 		self.valid = False
+		self.args = []
+		self.kwargs = []
+		self.defaults = {}
+		self.varargs = False
+
+		sig = inspect.signature(self.func)
+		for name, arg in sig.parameters.items():
+			if arg.kind == Parameter.VAR_POSITIONAL:
+				self.varargs = True
+			elif arg.default == Parameter.empty:
+				self.args.append(name)
+			else:
+				self.defaults[name] = arg.default
+				if arg.default in (True, False):
+					self.kwargs.append(name)
+				else:
+					self.kwargs.append(name + '=')
 
 	def __call__(self, *args, **kwargs):
-		if self.valid:
-			return self.valid
-		self.invoke(*args, **kwargs)
+		return self.valid or self.call(*args, **kwargs)
 
-	def invoke(self, *args, **kwargs):
-		print('Grilling {}...'.format(self.qualname))
+	def invoke(self, args=[]):
+		# FIXME: positional/keyword arguments explode when using varargs
+		# eg: def f(a, b=False, *args) breaks if you provide 2 args
+		# however, def f(a, *args, b=False) is totally fine because b is kw-only
+
+		kwargs = self.defaults.copy()
+		if self.kwargs:
+			temp_kwargs, args = getopt(args, '', self.kwargs)
+			temp_kwargs = self.parse_opts(*temp_kwargs)
+			kwargs.update(temp_kwargs)
+
+		posargs = []
+		for arg in self.args:
+			if not len(args):
+				self.burn('Wrong number of arguments')
+			posargs.append(args[0])
+			args = args[1:]
+
+		if self.varargs:
+			self.call(*(posargs + args), **kwargs)
+			return []
+
+		self.call(*posargs, **kwargs)
+		return args
+
+	def call(self, *args, **kwargs):
 		try:
 			self.func(*args, **kwargs)
 		except BurnException as ex:
@@ -75,3 +120,18 @@ class Steak(object):
 		else:
 			self.valid = True
 			return self.valid
+
+	def parse_opts(self, *opts):
+		ret = {}
+		for key, val in opts:
+			if key[:2] == '--':
+				key = key[2:]
+			elif key[:1] == '-':
+				key = key[1:]
+			if val == '':
+				val = True # FIXME: should be opposite of flag setting
+			ret[key.replace('-', '_')] = val
+		return ret
+
+	def burn(self, message, *args):
+		raise BurnException(message.format(*args))
