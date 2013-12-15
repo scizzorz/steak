@@ -54,6 +54,10 @@ class Grill(object):
 			if 'teardown' in self:
 				self['teardown'].invoke()
 
+	def help(self):
+		for key in self.steaks:
+			print(key)
+
 	def __getitem__(self, key):
 		matches = [self.steaks[x] for x in self.steaks if x.startswith(key)]
 		if matches:

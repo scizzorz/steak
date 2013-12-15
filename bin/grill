@@ -40,4 +40,9 @@ if __name__ == '__main__':
 		mod = _import(filename, modulename)
 		_inspect(grill, mod)
 
-	grill.main(args)
+	if not len(args) or args[0] in ('-h', '--help'):
+		grill.help()
+	elif args[0] in ('-v', '--version'):
+		print('steak', steak.__version__)
+	else:
+		grill.main(args)
