@@ -14,6 +14,8 @@ if 'grill' not in sys.path:
 def _import(filename, modulename='__grill__'):
 	if os.path.exists(filename) and modulename not in sys.modules:
 		sys.modules[modulename] = imp.load_source(modulename, filename)
+
+	if modulename in sys.modules:
 		return sys.modules[modulename]
 
 def _inspect(grill, module):
