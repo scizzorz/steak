@@ -1,7 +1,7 @@
 import inspect
 import traceback
 from getopt import getopt
-from inspect import Parameter
+from inspect import Parameter as Param
 from functools import wraps
 
 __version_info__ = (0, 1, 0)
@@ -81,12 +81,16 @@ class Steak(object):
 		self.varargs = False
 
 		sig = inspect.signature(self.func)
+		self.params = sig.parameters
 		for name, arg in sig.parameters.items():
-			if arg.kind == Parameter.VAR_POSITIONAL:
-				self.varargs = True
-			elif arg.default == Parameter.empty:
+			if arg.kind in (Param.POSITIONAL_ONLY, Param.POSITIONAL_OR_KEYWORD):
 				self.args.append(name)
-			else:
+			elif arg.kind == Param.KEYWORD_ONLY:
+				self.kwargs.append(name)
+			elif arg.kind == Param.VAR_POSITIONAL:
+				self.varargs = True
+
+			if arg.default is not Param.empty:
 				self.defaults[name] = arg.default
 				if arg.default in (True, False):
 					self.kwargs.append(name)
@@ -97,10 +101,6 @@ class Steak(object):
 		return self.valid or self.call(*args, **kwargs)
 
 	def invoke(self, args=[]):
-		# FIXME: positional/keyword arguments explode when using varargs
-		# eg: def f(a, b=False, *args) breaks if you provide 2 args
-		# however, def f(a, *args, b=False) is totally fine because b is kw-only
-
 		kwargs = self.defaults.copy()
 		if self.kwargs:
 			temp_kwargs, args = getopt(args, '', self.kwargs)
@@ -109,10 +109,14 @@ class Steak(object):
 
 		posargs = []
 		for arg in self.args:
-			if not len(args):
-				self.grill.burn('Wrong number of arguments')
-			posargs.append(args[0])
-			args = args[1:]
+			if arg in kwargs:
+				posargs.append(kwargs[arg])
+				del kwargs[arg]
+			else:
+				if not len(args):
+					self.grill.burn('Wrong number of arguments')
+				posargs.append(args[0])
+				args = args[1:]
 
 		if self.varargs:
 			self.call(*(posargs + args), **kwargs)
