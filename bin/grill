@@ -8,10 +8,10 @@ import types
 
 if '.' not in sys.path:
 	sys.path.append('.')
-if 'steak' not in sys.path:
-	sys.path.append('steak')
+if 'grill' not in sys.path:
+	sys.path.append('grill')
 
-def _import(filename, modulename='__steak__'):
+def _import(filename, modulename='__grill__'):
 	if os.path.exists(filename) and modulename not in sys.modules:
 		sys.modules[modulename] = imp.load_source(modulename, filename)
 		return sys.modules[modulename]
@@ -26,14 +26,13 @@ def _inspect(grill, module):
 if __name__ == '__main__':
 	args = sys.argv[1:]
 
-	#files = [('steak.py', '__steak__'), ('grill.py', '__steak__')]
-	files = [('grill.py', '__steak__')]
+	files = [('grill.py', '__grill__')]
 
-	if os.path.exists('steak'):
-		for filename in os.listdir('steak'):
+	if os.path.exists('grill'):
+		for filename in os.listdir('grill'):
 			basename, ext = os.path.splitext(filename)
 			if ext == '.py':
-				files.append((os.path.join('steak', filename), basename))
+				files.append((os.path.join('grill', filename), basename))
 
 	grill = steak.Grill()
 

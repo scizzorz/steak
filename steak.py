@@ -70,7 +70,7 @@ class Steak(object):
 		self.name = func.__name__
 		self.doc = func.__doc__
 		self.module = inspect.getmodule(func).__name__
-		self.qual = ('') if (self.module == '__steak__') else (self.module + '.')
+		self.qual = ('') if (self.module == '__grill__') else (self.module + '.')
 		self.qualname = self.qual + self.name
 
 		self.valid = False
