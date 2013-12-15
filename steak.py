@@ -46,10 +46,10 @@ class Grill(object):
 					else:
 						self.burn('No task found')
 		except BurnException as ex:
-			print('Oops. Your {!r} steak was burned :( {}'.format(self[name], ex))
+			print('Oops. Your {!r} steak was burned :( {}'.format(self[name] or name, ex))
 		except Exception as ex:
 			traceback.print_exc()
-			print('Oops. Your {!r} steak exploded :( {}'.format(self[name], ex))
+			print('Oops. Your {!r} steak exploded :( {}'.format(self[name] or name, ex))
 		finally:
 			if 'teardown' in self:
 				self['teardown'].invoke()
@@ -58,7 +58,6 @@ class Grill(object):
 		matches = [self.steaks[x] for x in self.steaks if x.startswith(key)]
 		if matches:
 			return matches[0]
-		raise KeyError
 
 	def __contains__(self, item):
 		matches = [x for x in self.steaks if x.startswith(item)]
@@ -146,4 +145,4 @@ class Steak(object):
 		return self.qualname
 
 	def __repr__(self):
-		return self.grill.highlight(str(self), 1 if self.valid else 2)
+		return self.grill.highlight(str(self), 2 if self.valid else 1)
