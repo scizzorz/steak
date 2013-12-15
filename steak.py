@@ -2,7 +2,6 @@ import inspect
 import traceback
 from getopt import getopt
 from inspect import Parameter as Param
-from functools import wraps
 
 __version_info__ = (0, 1, 0)
 __version__ = '.'.join(map(str, __version_info__))
@@ -23,13 +22,19 @@ class Grill(object):
 
 		return func
 
-	def burn(self, message, *args):
+	@staticmethod
+	def burn(message, *args):
 		raise BurnException(message.format(*args))
 
-	def highlight(self, string, color):
+	@staticmethod
+	def highlight(string, color):
 		if color > 7:
 			color += 52
 		return '\033[{color}m{string}\033[0m'.format(string=string, color=color+30)
+
+	@staticmethod
+	def log(message, *args):
+		print(message.format(*args))
 
 	def main(self, args):
 		if 'setup' in self:
@@ -46,10 +51,10 @@ class Grill(object):
 					else:
 						self.burn('No task found')
 		except BurnException as ex:
-			print('Oops. Your {!r} steak was burned :( {}'.format(self[name] or name, ex))
+			self.log('Oops. Your {!r} steak was burned :( {}', self[name] or name, ex)
 		except Exception as ex:
 			traceback.print_exc()
-			print('Oops. Your {!r} steak exploded :( {}'.format(self[name] or name, ex))
+			self.log('Oops. Your {!r} steak exploded :( {}', self[name] or name, ex)
 		finally:
 			if 'teardown' in self:
 				self['teardown'].invoke()
@@ -66,6 +71,9 @@ class Grill(object):
 	def __contains__(self, item):
 		matches = [x for x in self.steaks if x.startswith(item)]
 		return len(matches) > 0
+
+	def __len__(self):
+		return len(self.steaks)
 
 class Steak(object):
 	def __init__(self, grill, func):
@@ -103,7 +111,7 @@ class Steak(object):
 	def __call__(self, *args, **kwargs):
 		return self.valid or self.call(*args, **kwargs)
 
-	def invoke(self, args=[]):
+	def invoke(self, args=()):
 		kwargs = self.defaults.copy()
 		if self.kwargs:
 			temp_kwargs, args = getopt(args, '', self.kwargs)
@@ -140,8 +148,8 @@ class Steak(object):
 				key = key[2:]
 			elif key[:1] == '-':
 				key = key[1:]
-			if val == '':
-				val = True # FIXME: should be opposite of flag setting
+			if val == '' and key in self.defaults:
+				val = not self.defaults[key]
 			ret[key.replace('-', '_')] = val
 		return ret
 
