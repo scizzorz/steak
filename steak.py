@@ -90,7 +90,7 @@ class Steak(object):
 		self.args = []
 		self.kwargs = []
 		self.defaults = {}
-		self.varargs = False
+		self.varargs = None
 
 		sig = inspect.signature(self.func)
 		self.params = sig.parameters
@@ -98,7 +98,7 @@ class Steak(object):
 			if arg.kind in (Param.POSITIONAL_ONLY, Param.POSITIONAL_OR_KEYWORD):
 				self.args.append(name)
 			elif arg.kind == Param.VAR_POSITIONAL:
-				self.varargs = True
+				self.varargs = name
 
 			if arg.default is not Param.empty:
 				self.defaults[name] = arg.default
@@ -173,7 +173,7 @@ class Steak(object):
 				ret.append(arg)
 
 		if self.varargs:
-			ret.append('[...]')
+			ret.append('[%s...]' % self.varargs)
 
 		ret = ' '.join(ret)
 		if self.doc:
