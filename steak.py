@@ -97,8 +97,6 @@ class Steak(object):
 		for name, arg in sig.parameters.items():
 			if arg.kind in (Param.POSITIONAL_ONLY, Param.POSITIONAL_OR_KEYWORD):
 				self.args.append(name)
-			elif arg.kind == Param.KEYWORD_ONLY:
-				self.kwargs.append(name)
 			elif arg.kind == Param.VAR_POSITIONAL:
 				self.varargs = True
 
@@ -133,8 +131,8 @@ class Steak(object):
 				args = args[1:]
 
 		if self.varargs:
-			self.call(*(posargs + args), **kwargs)
-			return [], self.store
+			self.call(*(list(posargs) + list(args)), **kwargs)
+			return (), self.store
 
 		self.call(*posargs, **kwargs)
 		return args, self.store
