@@ -19,7 +19,7 @@ def test_steak():
 	assert something.args == []
 	assert something.kwargs == []
 	assert something.defaults == {}
-	assert something.varargs is False
+	assert something.varargs is None
 
 def test_steak_posargs():
 	grill = steak.Grill()
@@ -40,7 +40,7 @@ def test_steak_posargs():
 	assert something.args == ['a', 'b']
 	assert something.kwargs == []
 	assert something.defaults == {}
-	assert something.varargs is False
+	assert something.varargs is None
 
 def test_steak_kwargs():
 	grill = steak.Grill()
@@ -61,7 +61,7 @@ def test_steak_kwargs():
 	assert something.args == ['a', 'b']
 	assert something.kwargs == ['a=', 'b']
 	assert something.defaults == {'a': None, 'b': False}
-	assert something.varargs is False
+	assert something.varargs is None
 
 def test_steak_varargs():
 	grill = steak.Grill()
@@ -82,7 +82,7 @@ def test_steak_varargs():
 	assert something.args == []
 	assert something.kwargs == []
 	assert something.defaults == {}
-	assert something.varargs is True
+	assert something.varargs == 'args'
 
 def test_steak_poskwargs():
 	grill = steak.Grill()
@@ -103,7 +103,7 @@ def test_steak_poskwargs():
 	assert something.args == ['a', 'b', 'c', 'd']
 	assert something.kwargs == ['c=', 'd']
 	assert something.defaults == {'c': None, 'd': False}
-	assert something.varargs is False
+	assert something.varargs is None
 
 def test_steak_posvarargs():
 	grill = steak.Grill()
@@ -124,7 +124,7 @@ def test_steak_posvarargs():
 	assert something.args == ['a', 'b']
 	assert something.kwargs == []
 	assert something.defaults == {}
-	assert something.varargs is True
+	assert something.varargs == 'c'
 
 def test_steak_kwvarargs():
 	grill = steak.Grill()
@@ -145,7 +145,7 @@ def test_steak_kwvarargs():
 	assert something.args == ['a', 'b']
 	assert something.kwargs == ['a', 'b=']
 	assert something.defaults == {'a': False, 'b': None}
-	assert something.varargs is True
+	assert something.varargs == 'c'
 
 def test_steak_poskwvarargs():
 	grill = steak.Grill()
@@ -166,7 +166,7 @@ def test_steak_poskwvarargs():
 	assert something.args == ['a', 'b', 'c', 'd']
 	assert something.kwargs == ['c', 'd=']
 	assert something.defaults == {'c': False, 'd': None}
-	assert something.varargs is True
+	assert something.varargs == 'e'
 
 def test_steak_posvarkwargs():
 	grill = steak.Grill()
@@ -187,7 +187,7 @@ def test_steak_posvarkwargs():
 	assert something.args == ['a', 'b']
 	assert something.kwargs == ['d=', 'e']
 	assert something.defaults == {'d': None, 'e': False}
-	assert something.varargs is True
+	assert something.varargs == 'c'
 
 def test_steak_poskwvarkwargs():
 	grill = steak.Grill()
@@ -208,4 +208,4 @@ def test_steak_poskwvarkwargs():
 	assert something.args == ['a', 'b']
 	assert something.kwargs == ['b', 'd=', 'e']
 	assert something.defaults == {'b': True, 'd': None, 'e': False}
-	assert something.varargs is True
+	assert something.varargs == 'c'
