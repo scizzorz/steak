@@ -37,17 +37,16 @@ class Grill(object):
 		print(message.format(*args))
 
 	def main(self, args):
-		if 'setup' in self:
-			args = self['setup'].invoke(args)
-
 		try:
+			if 'setup' in self:
+				args, _ = self['setup'].invoke(args)
 			if not args and 'default' in self:
 				self['default'].invoke()
 			else:
 				while args:
 					name = args[0]
 					if name in self:
-						args = self[name].invoke(args[1:])
+						args, _ = self[name].invoke(args[1:])
 					else:
 						self.burn('No task found')
 		except BurnException as ex:
@@ -112,7 +111,7 @@ class Steak(object):
 
 	def __call__(self, *args, **kwargs):
 		if self.valid is None:
-			self.store = self.call(*args, **kwargs)
+			self.call(*args, **kwargs)
 		return self.store
 
 	def invoke(self, args=()):
@@ -135,15 +134,20 @@ class Steak(object):
 
 		if self.varargs:
 			self.call(*(posargs + args), **kwargs)
-			return []
+			return [], self.store
 
 		self.call(*posargs, **kwargs)
-		return args
+		return args, self.store
 
 	def call(self, *args, **kwargs):
-		self.func(*args, **kwargs)
-		self.valid = True
-		return self.valid
+		try:
+			self.store = self.func(*args, **kwargs)
+		except:
+			self.valid = False
+			raise
+		else:
+			self.valid = True
+		return self.store
 
 	def parse_opts(self, *opts):
 		ret = {}
