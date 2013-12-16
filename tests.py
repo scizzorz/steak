@@ -333,26 +333,74 @@ def test_invoke_kwvarargs():
 def test_invoke_poskwvarargs():
 	grill = steak.Grill()
 	@grill.steak
-	def something(a, b, c=False, d=None, *e):
+	def something(a, b, c=None, d=False, *e):
 		'Something.'
-		return True
+		return (a, b, c, d, e)
 
-	assert False
+	assert something.invoke(('--c=one', '--d', 'two', 'three')) == ((), ('two', 'three', 'one', True, ()))
+	assert something.invoke(('--d', '--c=one', 'two', 'three')) == ((), ('two', 'three', 'one', True, ()))
+	assert something.invoke(('--c', 'one', '--d', 'two', 'three')) == ((), ('two', 'three', 'one', True, ()))
+	assert something.invoke(('--d', '--c', 'one', 'two', 'three')) == ((), ('two', 'three', 'one', True, ()))
+	assert something.invoke(('--c=one', 'two', 'three')) == ((), ('two', 'three', 'one', False, ()))
+	assert something.invoke(('--c', 'one', 'two', 'three')) == ((), ('two', 'three', 'one', False, ()))
+	assert something.invoke(('--d', 'two', 'three')) == ((), ('two', 'three', None, True, ()))
+	assert something.invoke(('one', 'two')) == ((), ('one', 'two', None, False, ()))
+
+	assert something.invoke(('--c=one', '--d', 'two', 'three', 'end')) == ((), ('two', 'three', 'one', True, ('end',)))
+	assert something.invoke(('--d', '--c=one', 'two', 'three', 'end')) == ((), ('two', 'three', 'one', True, ('end',)))
+	assert something.invoke(('--c', 'one', '--d', 'two', 'three', 'end')) == ((), ('two', 'three', 'one', True, ('end',)))
+	assert something.invoke(('--d', '--c', 'one', 'two', 'three', 'end')) == ((), ('two', 'three', 'one', True, ('end',)))
+	assert something.invoke(('--c=one', 'two', 'three', 'end')) == ((), ('two', 'three', 'one', False, ('end',)))
+	assert something.invoke(('--c', 'one', 'two', 'three', 'end')) == ((), ('two', 'three', 'one', False, ('end',)))
+	assert something.invoke(('--d', 'two', 'three', 'end')) == ((), ('two', 'three', None, True, ('end',)))
+	assert something.invoke(('one', 'two', 'end')) == ((), ('one', 'two', None, False, ('end',)))
 
 def test_invoke_posvarkwargs():
 	grill = steak.Grill()
 	@grill.steak
 	def something(a, b, *c, d=None, e=False):
 		'Something.'
-		return True
+		return (a, b, c, d, e)
 
-	assert False
+	assert something.invoke(('--d=one', '--e', 'two', 'three')) == ((), ('two', 'three', (), 'one', True))
+	assert something.invoke(('--e', '--d=one', 'two', 'three')) == ((), ('two', 'three', (), 'one', True))
+	assert something.invoke(('--d', 'one', '--e', 'two', 'three')) == ((), ('two', 'three', (), 'one', True))
+	assert something.invoke(('--e', '--d', 'one', 'two', 'three')) == ((), ('two', 'three', (), 'one', True))
+	assert something.invoke(('--d=one', 'two', 'three')) == ((), ('two', 'three', (), 'one', False))
+	assert something.invoke(('--d', 'one', 'two', 'three')) == ((), ('two', 'three', (), 'one', False))
+	assert something.invoke(('--e', 'two', 'three')) == ((), ('two', 'three', (), None, True))
+	assert something.invoke(('one', 'two')) == ((), ('one', 'two', (), None, False))
+
+	assert something.invoke(('--d=one', '--e', 'two', 'three', 'end')) == ((), ('two', 'three', ('end',), 'one', True))
+	assert something.invoke(('--e', '--d=one', 'two', 'three', 'end')) == ((), ('two', 'three', ('end',), 'one', True))
+	assert something.invoke(('--d', 'one', '--e', 'two', 'three', 'end')) == ((), ('two', 'three', ('end',), 'one', True))
+	assert something.invoke(('--e', '--d', 'one', 'two', 'three', 'end')) == ((), ('two', 'three', ('end',), 'one', True))
+	assert something.invoke(('--d=one', 'two', 'three', 'end')) == ((), ('two', 'three', ('end',), 'one', False))
+	assert something.invoke(('--d', 'one', 'two', 'three', 'end')) == ((), ('two', 'three', ('end',), 'one', False))
+	assert something.invoke(('--e', 'two', 'three', 'end')) == ((), ('two', 'three', ('end',), None, True))
+	assert something.invoke(('one', 'two', 'end')) == ((), ('one', 'two', ('end',), None, False))
 
 def test_invoke_poskwvarkwargs():
 	grill = steak.Grill()
 	@grill.steak
-	def something(a, b=True, *c, d=None, e=False):
+	def something(a, b=True, *c, d=None):
 		'Something.'
-		return True
+		return (a, c, d, b)
 
-	assert False
+	assert something.invoke(('--d=one', '--b', 'two')) == ((), ('two', (), 'one', False))
+	assert something.invoke(('--b', '--d=one', 'two')) == ((), ('two', (), 'one', False))
+	assert something.invoke(('--d', 'one', '--b', 'two')) == ((), ('two', (), 'one', False))
+	assert something.invoke(('--b', '--d', 'one', 'two')) == ((), ('two', (), 'one', False))
+	assert something.invoke(('--d=one', 'two')) == ((), ('two', (), 'one', True))
+	assert something.invoke(('--d', 'one', 'two')) == ((), ('two', (), 'one', True))
+	assert something.invoke(('--b', 'two')) == ((), ('two', (), None, False))
+	assert something.invoke(('one',)) == ((), ('one', (), None, True))
+
+	assert something.invoke(('--d=one', '--b', 'two', 'end')) == ((), ('two', ('end',), 'one', False))
+	assert something.invoke(('--b', '--d=one', 'two', 'end')) == ((), ('two', ('end',), 'one', False))
+	assert something.invoke(('--d', 'one', '--b', 'two', 'end')) == ((), ('two', ('end',), 'one', False))
+	assert something.invoke(('--b', '--d', 'one', 'two', 'end')) == ((), ('two', ('end',), 'one', False))
+	assert something.invoke(('--d=one', 'two', 'end')) == ((), ('two', ('end',), 'one', True))
+	assert something.invoke(('--d', 'one', 'two', 'end')) == ((), ('two', ('end',), 'one', True))
+	assert something.invoke(('--b', 'two', 'end')) == ((), ('two', ('end',), None, False))
+	assert something.invoke(('one', 'end')) == ((), ('one', ('end',), None, True))
