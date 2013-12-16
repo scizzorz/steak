@@ -60,8 +60,8 @@ class Grill(object):
 				self['teardown'].invoke()
 
 	def help(self):
-		for key in self.steaks:
-			print(key)
+		for key in sorted(self.steaks):
+			self.log(self.steaks[key].help())
 
 	def __getitem__(self, key):
 		matches = [self.steaks[x] for x in self.steaks if x.startswith(key)]
@@ -85,7 +85,9 @@ class Steak(object):
 		self.qual = ('') if (self.module == '__grill__') else (self.module + '.')
 		self.qualname = self.qual + self.name
 
-		self.valid = False
+		self.store = None
+
+		self.valid = None
 		self.args = []
 		self.kwargs = []
 		self.defaults = {}
@@ -109,7 +111,9 @@ class Steak(object):
 					self.kwargs.append(name + '=')
 
 	def __call__(self, *args, **kwargs):
-		return self.valid or self.call(*args, **kwargs)
+		if self.valid is None:
+			self.store = self.call(*args, **kwargs)
+		return self.store
 
 	def invoke(self, args=()):
 		kwargs = self.defaults.copy()
@@ -153,8 +157,35 @@ class Steak(object):
 			ret[key.replace('-', '_')] = val
 		return ret
 
+	def help(self):
+		ret = [repr(self)]
+
+		for arg, val in self.defaults.items():
+			if val in (True, False):
+				ret.append('[--%s]' % arg)
+			else:
+				ret.append('[--%s %s]' % (arg, val))
+
+		for arg in self.args:
+			if arg not in self.defaults:
+				ret.append(arg)
+
+		if self.varargs:
+			ret.append('[...]')
+
+		ret = ' '.join(ret)
+		if self.doc:
+			ret += '\n\t' + self.doc
+
+		return ret
+
 	def __str__(self):
 		return self.qualname
 
 	def __repr__(self):
-		return self.grill.highlight(str(self), 2 if self.valid else 1)
+		color = 4
+		if self.valid is True:
+			color = 2
+		elif self.valid is False:
+			color = 1
+		return self.grill.highlight(str(self), color)
