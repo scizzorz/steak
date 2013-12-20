@@ -39,16 +39,14 @@ class Grill(object):
 	def main(self, args):
 		try:
 			if 'setup' in self:
+				name = 'setup'
 				args, _ = self['setup'].invoke(args)
-			if not args and 'default' in self:
-				self['default'].invoke()
-			else:
-				while args:
-					name = args[0]
-					if name in self:
-						args, _ = self[name].invoke(args[1:])
-					else:
-						self.burn('No task found')
+			while args:
+				name = args[0]
+				if name in self:
+					args, _ = self[name].invoke(args[1:])
+				else:
+					self.burn('No task found')
 		except BurnException as ex:
 			self.log('Oops. Your {!r} steak was burned :( {}', self[name] or name, ex)
 		except Exception as ex:
