@@ -2,12 +2,41 @@ import steak
 
 def test_steak():
 	grill = steak.Grill()
-	@grill.steak
 	def something():
 		'Something.'
 		return True
 
+	before = something
+	something = grill.steak(something)
+
 	assert isinstance(something, steak.Steak)
+	assert something.func is before
+	assert something.grill is grill
+	assert something.name == 'something'
+	assert something.doc == 'Something.'
+	assert something.module == 'test_steak'
+	assert something.qual == 'test_steak.'
+	assert something.qualname == 'test_steak.something'
+	assert something.store is None
+	assert something.valid is None
+	assert something.args == []
+	assert something.kwargs == []
+	assert something.defaults == {}
+	assert something.varargs is None
+
+def test_double_steak():
+	grill = steak.Grill()
+	def something():
+		'Something.'
+		return True
+
+	before = something
+	something = grill.steak(something)
+	double = grill.steak(something)
+
+	assert something is double
+	assert isinstance(something, steak.Steak)
+	assert something.func is before
 	assert something.grill is grill
 	assert something.name == 'something'
 	assert something.doc == 'Something.'
