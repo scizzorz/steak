@@ -1,5 +1,7 @@
 # steak.py
 
+[![Build Status](https://travis-ci.org/scizzorz/steak.png)](https://travis-ci.org/scizzorz/steak)
+
 **Simplify writing and executing repetitive tasks.**
 
 Steak is a minimal and powerful utility for collecting all of your mindless,
