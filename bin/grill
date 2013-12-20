@@ -34,7 +34,9 @@ if __name__ == '__main__':
 
 	files = []
 
-	if os.path.exists('grill.py'):
+	if os.path.exists('steakfile'):
+		files.append(('steakfile', '__grill__'))
+	elif os.path.exists('grill.py'):
 		files.append(('grill.py', '__grill__'))
 	elif os.path.exists('grill'):
 		for filename in os.listdir('grill'):
